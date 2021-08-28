@@ -61,7 +61,7 @@ contract Registration{
     }
    
     function registerSeller (address seller, string memory sellerLocation, string  memory sellerName) public onlyGovermentEntity {
-        require(Sellers[seller], 
+        require(!Sellers[seller], 
         "Seller is registered already"); 
         Sellers[seller] = true;
         
@@ -71,13 +71,12 @@ contract Registration{
      function registerSortingMachine (address sortingMachine, address seller) public onlyGovermentEntity {
         require(!sortingMachines[sortingMachine], 
         "Sorting Machine is registered already");
+        sortingMachines[sortingMachine] = true;
         
         emit SortingMachineRegistered(sortingMachine, seller);
          
      }
     
-    
-    //The following are used for interfacing with other smart contracts
 
     // Used in BottleProductionSC
    function isManufactuererExist(address manufactuerer) external view returns (bool){
@@ -96,7 +95,7 @@ contract Registration{
     
     
     // Used in Tracking SC 
-    function isSortingMachineExist(address sortingMachine) external view returns (bool){ // fixed
+    function isSortingMachineExist(address sortingMachine) external view returns (bool){ 
         return sortingMachines[sortingMachine]; 
     }
 }
@@ -137,7 +136,7 @@ contract BottleProduction {
         _;
     }
     
-    function registerBottle (uint bottlePlasticType, uint bottleColor, uint bottleSize) public onlyRegisteredManufacturers{ //FIXED
+    function registerBottle (uint bottlePlasticType, uint bottleColor, uint bottleSize) public onlyRegisteredManufacturers{ 
        
         //get id of manufacturer from register contract
         ManufacturerID = R.getManufactuererIdentifier(manufactuerer);
@@ -178,8 +177,8 @@ contract Tracking{
     address registrationAddress; 
     Registration R; 
     //variables for counting plastic bottles scanned in the sorting machine 
-    uint256 public bottlesSorted;  //Fixed
-    uint256 public plasticBaleSize;  //Fixed
+    uint256 public bottlesSorted;  
+    uint256 public plasticBaleSize;  
     
     address [] public plasticBale; // PlaticBale is a collection of plastic bottle addresses
     address payable [] public plasticBaleContributorsAddresses; 
@@ -210,21 +209,21 @@ contract Tracking{
     
     
 
-    function setPlasticBaleSize (uint _plasticBaleSize) public {  // Fixed 
+    function setPlasticBaleSize (uint _plasticBaleSize) public  sortingMachineOnly {  
         plasticBaleSize = _plasticBaleSize;
           }
           
-    function setIPFSHash (string memory  _IPFSHash) public {  // Fixed 
+    function setIPFSHash (string memory  _IPFSHash) public sortingMachineOnly { 
         IPFSHash = _IPFSHash;
           }     
     
     
-    function updateDisposedStage (address plasticBottle) public{ //Fixed
+    function updateDisposedStage (address plasticBottle) public{ 
         bottleToRecycler[plasticBottle] = msg.sender; 
         emit plasticBottleDisposed (msg.sender, plasticBottle, 'Disposed', now);
     }
     
-    function updateSortedStage (address plasticBottle, address payable seller) public sortingMachineOnly{ // Fixed
+    function updateSortedStage (address plasticBottle, address payable seller) public sortingMachineOnly{ 
         
        plasticBaleContributorsAddresses.push(bottleToRecycler[plasticBottle]); 
        plasticBale.push(plasticBottle);
@@ -238,9 +237,9 @@ contract Tracking{
     }
     
     
-    function createPlasticBale(address payable seller, string memory _IPFSHash ) public { //fixed 
+    function createPlasticBale(address payable seller, string memory _IPFSHash ) public { 
          bottlesSorted = 0; //reseting the counter
-         PlasticBale newBale = new PlasticBale(plasticBale, plasticBaleContributorsAddresses, seller, _IPFSHash, registrationAddress );
+         PlasticBale newBale = new PlasticBale(plasticBale, plasticBaleContributorsAddresses, seller, _IPFSHash, registrationAddress);
          deployedPlasticBales.push(address(newBale)); 
          emit plasticBaleCompleted (plasticBale, plasticBaleContributorsAddresses, seller, newBale, plasticBaleSize, _IPFSHash,  now); 
     }
@@ -339,7 +338,7 @@ contract PlasticBale{
         endTime = closingTime; 
        
        // Contract address is the bale address 
-        emit auctionStarted(address(this), startPrice, closingTime, baleHash); //(new) baleHash
+        emit auctionStarted(address(this), startPrice, closingTime, baleHash);
     }
     
     function placeBid( uint amount)  onlyBidder payable public{
@@ -355,7 +354,7 @@ contract PlasticBale{
         //Validating the amount of wei sent with the transaction 
         require(msg.value == amount, "Insufficient Deposit."); 
         
-        bidder[msg.sender].placedBids++; //STOPPED HERE WHEN CHECKING 
+        bidder[msg.sender].placedBids++; 
         bidder[msg.sender].deposit += msg.value; 
         
         highestBid = amount; 
@@ -446,14 +445,3 @@ contract PlasticBale{
  
     
 }
-
-
-
-
-
-
-
-
-
-
-
