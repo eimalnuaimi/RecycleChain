@@ -177,8 +177,8 @@ contract Tracking{
     address registrationAddress; 
     Registration R; 
     //variables for counting plastic bottles scanned in the sorting machine 
-    uint256 public bottlesSorted;  
-    uint256 public plasticBaleSize;  
+    uint public bottlesSorted;  
+    uint public plasticBaleSize;  
     
     address [] public plasticBale; // PlaticBale is a collection of plastic bottle addresses
     address payable [] public plasticBaleContributorsAddresses; 
@@ -196,7 +196,7 @@ contract Tracking{
     event plasticBottleDisposed(address indexed recycler, address indexed plasticBottle, string wasteManagmentStage, uint  time);
     event plasticBottleSorted(address indexed seller, address indexed plasticBottle, string  wasteManagmentStage, uint time); 
     event plasticBaleCompleted(address [] plasticBale, address payable [] plasticBaleContributorsAddresses,  address indexed seller, 
-    PlasticBale plasticbale, uint256 bottlesInBaleNo, string IPFSHash,  uint time); 
+    PlasticBale plasticbale, uint bottlesInBaleNo, string IPFSHash,  uint time); 
     
     
     modifier sortingMachineOnly{
