@@ -78,23 +78,21 @@ contract Registration{
      }
     
 
-    // Used in BottleProductionSC
    function isManufactuererExist(address manufactuerer) external view returns (bool){
         return Manufacturers[manufactuerer].exist;
        }
        
-       // Used in PlasticBale SC
+       
     function isBuyerExist(address buyer) external view returns (bool){
         return Buyers[buyer];
     }
     
-     // Used in BottleProductionSC
+     
    function getManufactuererIdentifier(address manufacturer) external view returns (uint){
         return Manufacturers[manufacturer].idenftifier;
    }
     
     
-    // Used in Tracking SC 
     function isSortingMachineExist(address sortingMachine) external view returns (bool){ 
         return sortingMachines[sortingMachine]; 
     }
@@ -138,10 +136,8 @@ contract BottleProduction {
     
     function registerBottle (uint bottlePlasticType, uint bottleColor, uint bottleSize) public onlyRegisteredManufacturers{ 
        
-        //get id of manufacturer from register contract
         ManufacturerID = R.getManufactuererIdentifier(manufactuerer);
         
-        // gets generated address for bottle
         bottleAddress = generateUniqueBottleAddress(ManufacturerID, bottlePlasticType, bottleColor, bottleSize);
         
         manufacturedBottles[bottleAddress] = PlasticBottle(bottleAddress, ManufacturerID, bottlePlasticType, bottleColor, bottleSize);
@@ -150,16 +146,14 @@ contract BottleProduction {
     }
     
      function generateUniqueBottleAddress (uint _ManufacturerID, uint bottlePlasticType, uint bottleColor, uint bottleSize) internal view returns (address) {
-        //https://gist.github.com/techbubble/8f9db0f3ddd83ae0b1786ccf7805c461
-        
-        //generates a unique 20 byte value
+    
         bytes20 b = bytes20(keccak256(abi.encodePacked(msg.sender, now)));
         
         uint addr = 0;
-        for (uint index = b.length-1; index > 1; index--) {// used to extract the least significant 16 bytes
+        for (uint index = b.length-1; index > 1; index--) {
             addr += uint(uint8(b[index])) * ( 16 ** ((b.length - index - 1)*2));
         }
-        
+
         //this will append the ID's to the bottle address 0x(manufact)(type)(color)(size)...etc
         uint firstMSByte= _ManufacturerID*16 +bottlePlasticType;
         uint secondMSByte= bottleColor*16 +bottleSize;
@@ -176,11 +170,11 @@ contract Tracking{
     string IPFSHash;
     address registrationAddress; 
     Registration R; 
-    //variables for counting plastic bottles scanned in the sorting machine 
+    
     uint public bottlesSorted;  
     uint public plasticBaleSize;  
     
-    address [] public plasticBale; // PlaticBale is a collection of plastic bottle addresses
+    address [] public plasticBale; 
     address payable [] public plasticBaleContributorsAddresses; 
     address [] public deployedPlasticBales;
     
@@ -238,7 +232,7 @@ contract Tracking{
     
     
     function createPlasticBale(address payable seller, string memory _IPFSHash ) public { 
-         bottlesSorted = 0; //reseting the counter
+         bottlesSorted = 0; 
          PlasticBale newBale = new PlasticBale(plasticBale, plasticBaleContributorsAddresses, seller, _IPFSHash, registrationAddress);
          deployedPlasticBales.push(address(newBale)); 
          emit plasticBaleCompleted (plasticBale, plasticBaleContributorsAddresses, seller, newBale, plasticBaleSize, _IPFSHash,  now); 
@@ -253,8 +247,8 @@ contract PlasticBale{
      address[] public plasticBale; 
      address payable[] public contributors; 
      address payable[] public tempArray; 
-     uint public contribution;  //Added here
-     string public baleHash; //(new)
+     uint public contribution; 
+     string public baleHash; 
      
     address registrationAddress; 
     Registration R; 
@@ -312,7 +306,7 @@ contract PlasticBale{
     event plasticBottleSold(address buyer, address indexed plasticBottleAddress, string status, uint time); 
     
     
-    function addBidder(address bidderAddr) onlyBidder public { //Fixed
+    function addBidder(address bidderAddr) onlyBidder public { 
         
     require(bidder[bidderAddr].isExist == false, 
     "Bidder already joined the Auction.");
@@ -337,7 +331,6 @@ contract PlasticBale{
         startTime = now; 
         endTime = closingTime; 
        
-       // Contract address is the bale address 
         emit auctionStarted(address(this), startPrice, closingTime, baleHash);
     }
     
@@ -348,10 +341,10 @@ contract PlasticBale{
         
         require(isOpen,"Auction is not opened.");
         
-        // To place a bid, amount sent has to be bigger than the highest bid 
+        
         require(amount > highestBid, "Place a higher bid."); 
         
-        //Validating the amount of wei sent with the transaction 
+        
         require(msg.value == amount, "Insufficient Deposit."); 
         
         bidder[msg.sender].placedBids++; 
@@ -366,7 +359,6 @@ contract PlasticBale{
     
     function exitAuction() onlyBidder public {
         
-        // Buyers can exit auction if no bids are placed yet 
         require(bidder[msg.sender].placedBids == 0,
         "Buyer has placed a bid already."); 
         bidder[msg.sender] = buyer(false, 0 ,0); 
@@ -398,7 +390,7 @@ contract PlasticBale{
         uint contributionRate =0; 
         uint reward; 
         
-        //1. Filter unique recyclers from contributors array 
+        // Filter unique recyclers from contributors array 
         
         for(uint i=0; i < contributors.length; i++){
                 uint j;
@@ -409,7 +401,7 @@ contract PlasticBale{
                 tempArray.push(contributors[i]);
               }
         
-        //2. Find number of contribution 
+        // Find number of contribution 
 
         for(uint i=0; i < tempArray.length; i++){
             contribution=0;
@@ -443,5 +435,5 @@ contract PlasticBale{
         emit recyclerRewarded(recycler, reward);
     }
  
-    
+   
 }
